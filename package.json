@@ -2,6 +2,7 @@
   "dependencies": {
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.20.0",
     "howler": "^2.2.4"
   }
 }
