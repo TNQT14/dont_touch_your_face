@@ -11,8 +11,13 @@ import './App.css';
 
 // sound.play();
 
+const NOT_TOUCH = 'not_touch';
+const TOUCHED = 'touched';
+const TRAIN_TIME = 50;
 function App() {
 
+  const classifier = useRef();
+  const mobilenetModule = useRef();
   const video = useRef();
 
   const setupCamera = () => {
@@ -42,6 +47,15 @@ function App() {
   const init = async () => {
     console.log('init');
     await setupCamera();
+
+    console.log('Success');
+
+    classifier.current = knnClassifier.create();
+
+    mobilenetModule.current = await mobilenet.load();
+
+    console.log('Setup done');
+    console.log('Không chạm tay lên mặt và train1');
   }
 
   useEffect(() => {
@@ -52,6 +66,21 @@ function App() {
     }
   }, []);
 
+  const train = async label => {
+    console.log(label)
+    for (let i = 0; i < TRAIN_TIME; i++) {
+      console.log(`Progress ${parseInt((i + 1) / TRAIN_TIME * 100)}%`);
+      await sleep(100);
+    }
+
+
+  }
+
+  const sleep = (ms = 0) => {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+
   return (
     <div className="main">
       <video
@@ -61,9 +90,9 @@ function App() {
       />
 
       <div className="control">
-        <button className="btn">Train 1</button>
-        <button className="btn">Train 2</button>
-        <button className="btn">Run</button>
+        <button className="btn" onClick={() => train(NOT_TOUCH)}>Train 1</button>
+        <button className="btn" onClick={() => train(TOUCHED)}>Train 2</button>
+        <button className="btn" onClick={() => { }}>Run</button>
       </div>
     </div>
   );
