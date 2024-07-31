@@ -50,7 +50,7 @@ function App() {
 
     console.log('Success');
 
-    classifier.current = knnClassifier.create();
+    classifier.current = await knnClassifier.create();
 
     mobilenetModule.current = await mobilenet.load();
 
@@ -67,13 +67,28 @@ function App() {
   }, []);
 
   const train = async label => {
-    console.log(label)
+    console.log(`[${label} Đang train]`)
     for (let i = 0; i < TRAIN_TIME; i++) {
       console.log(`Progress ${parseInt((i + 1) / TRAIN_TIME * 100)}%`);
-      await sleep(100);
+      await training(label);
     }
+  }
 
+  const training = label => {
+    return new Promise(async resolve => {
+      const embedding = mobilenetModule.current.infer(
+        video.current,
+        true
+      );
 
+      classifier.current.addExample(
+        embedding,
+        label
+      );
+
+      await sleep(100);
+      resolve();
+    });
   }
 
   const sleep = (ms = 0) => {
