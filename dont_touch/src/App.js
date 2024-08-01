@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react'
+import * as tf from '@tensorflow/tfjs'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
+import '@tensorflow/tfjs-backend-cpu';
 import { Howl, Howler } from 'howler';
 import './App.css';
 // import soundURL from './assets/hey_thaitnq.mp3'
@@ -21,6 +23,7 @@ function App() {
   const video = useRef();
 
   const setupCamera = () => {
+    console.log('init setupCamera');
     return new Promise((resolve, reject) => {
       navigator.getUserMedia = navigator.getUserMedia ||
         navigator.webkitGetUserMedia ||
@@ -34,23 +37,31 @@ function App() {
           },
           stream => {
             video.current.srcObject = stream;
-            video.current.addEventListener('loadedata', resolve);
+            video.current.addEventListener('loadeddata', resolve);
           },
           error => reject(error)
         )
+        console.log('init Done');
       } else {
         reject();
       }
-    })
+      console.log('init Success');
+    });
   }
 
   const init = async () => {
-    console.log('init');
-    await setupCamera();
+    console.log('init camera');
+    try {
+      // console.log('Success');
+      await setupCamera();
+      // console.log('Success');
+    }
+    catch (e) {
+      console.log('Lỗi');
+    }
+    console.log('Setup Success');
 
-    console.log('Success');
-
-    classifier.current = await knnClassifier.create();
+    classifier.current = knnClassifier.create();
 
     mobilenetModule.current = await mobilenet.load();
 
@@ -91,6 +102,32 @@ function App() {
     });
   }
 
+  const run = async () => {
+    const embedding = mobilenetModule.current.infer(
+      video.current,
+      true
+    );
+
+    const result = await classifier.current.predictClass(
+      embedding
+    );
+
+    if (
+      result.label === TOUCHED &&
+      result.confidences[result.label] > 0.7
+    ) {
+      console.log('Touched');
+    }
+    else {
+      console.log('Not Touched');
+    }
+
+    await sleep(200);
+
+    run();
+
+  }
+
   const sleep = (ms = 0) => {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
@@ -107,7 +144,7 @@ function App() {
       <div className="control">
         <button className="btn" onClick={() => train(NOT_TOUCH)}>Train 1</button>
         <button className="btn" onClick={() => train(TOUCHED)}>Train 2</button>
-        <button className="btn" onClick={() => { }}>Run</button>
+        <button className="btn" onClick={() => run()}>Run</button>
       </div>
     </div>
   );
