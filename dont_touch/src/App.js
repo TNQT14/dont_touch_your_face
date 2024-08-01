@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
+import * as tf from '@tensorflow/tfjs'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
 import '@tensorflow/tfjs-backend-cpu';
 import { Howl } from 'howler';
-import { initNotifications } from '@mycv/f8-notification';
+import { initNotifications, notify } from '@mycv/f8-notification';
 import './App.css';
 import soundURL from './assets/hey_thaitnq.mp3'
 
@@ -23,6 +24,7 @@ function App() {
   const mobilenetModule = useRef();
   const video = useRef();
   const [touched, setTouched] = useState(false);
+  const canPlaySound = useRef(true);
 
   const setupCamera = () => {
     console.log('init setupCamera');
@@ -76,6 +78,11 @@ function App() {
   useEffect(() => {
     init();
 
+    sound.on('end', function () {
+      canPlaySound.current = true;
+      console.log('Finished!');
+    });
+
     return () => {
 
     }
@@ -121,12 +128,18 @@ function App() {
       result.confidences[result.label] > 0.7
     ) {
       console.log('Touched');
+
+      if (canPlaySound.current) {
+        sound.play();
+        canPlaySound.current = false;
+      }
+
+      notify('Bỏ tay ra', { body: 'Bạn vừa chạm tay vào mặt' });
       setTouched(true);
     }
     else {
       console.log('Not Touched');
-      sound.play();
-      notify('Bỏ tay ra', { body: 'Bạn vừa chạm tay vào mặt' });
+
       setTouched(false);
     }
 
