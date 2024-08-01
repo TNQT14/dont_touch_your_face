@@ -1,26 +1,28 @@
-import React, { useEffect, useRef } from 'react'
-import * as tf from '@tensorflow/tfjs'
+import React, { useEffect, useRef, useState } from 'react'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
 import '@tensorflow/tfjs-backend-cpu';
-import { Howl, Howler } from 'howler';
+import { Howl } from 'howler';
+import { initNotifications } from '@mycv/f8-notification';
 import './App.css';
-// import soundURL from './assets/hey_thaitnq.mp3'
+import soundURL from './assets/hey_thaitnq.mp3'
 
-// var sound = new Howl({
-//   src: [soundURL]
-// });
+var sound = new Howl({
+  src: [soundURL]
+});
 
-// sound.play();
 
 const NOT_TOUCH = 'not_touch';
 const TOUCHED = 'touched';
 const TRAIN_TIME = 50;
+
+
 function App() {
 
   const classifier = useRef();
   const mobilenetModule = useRef();
   const video = useRef();
+  const [touched, setTouched] = useState(false);
 
   const setupCamera = () => {
     console.log('init setupCamera');
@@ -67,6 +69,8 @@ function App() {
 
     console.log('Setup done');
     console.log('Không chạm tay lên mặt và train1');
+
+    initNotifications({ cooldown: 3000 });
   }
 
   useEffect(() => {
@@ -117,9 +121,13 @@ function App() {
       result.confidences[result.label] > 0.7
     ) {
       console.log('Touched');
+      setTouched(true);
     }
     else {
       console.log('Not Touched');
+      sound.play();
+      notify('Bỏ tay ra', { body: 'Bạn vừa chạm tay vào mặt' });
+      setTouched(false);
     }
 
     await sleep(200);
@@ -134,7 +142,7 @@ function App() {
 
 
   return (
-    <div className="main">
+    <div className={`main ${touched ? 'touched' : ''}`}>
       <video
         ref={video}
         className="video"
